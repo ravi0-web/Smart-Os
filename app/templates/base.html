@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Smart OS{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        /* brand helpers for places Tailwind utilities can't reach */
+        :root{
+            --primary:#8a10c5; /* vivid purple */
+            --ink:#010101;     /* near-black */
+        }
+        .focus-ring:focus{
+            outline: 3px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* 2. ADD CUSTOM SIMULATOR STYLES HERE (To integrate the previous non-Tailwind styles) */
+        .container { max-width: 900px; margin: 0 auto; }
+        .frame { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .table-input td, .table-input th { padding: 5px; text-align: center; }
+        .results-box { border: 2px solid #005599; padding: 20px; background-color: #f0f8ff; }
+        .metric-table th, .metric-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .metric-table { width: 100%; border-collapse: collapse; }
+        .recommendation { font-size: 1.2em; font-weight: bold; color: #d9534f; margin-bottom: 10px; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 selection:bg-[#8a10c5]/20 selection:text-[#010101]">
+
+    <header class="sticky top-0 z-40 shadow-sm">
+        <nav class="bg-gradient-to-r from-[#010101] via-[#151515] to-[#8a10c5] text-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="h-16 flex items-center justify-between">
+                    <a href="{% url 'index' %}" class="flex items-center gap-2">
+                        <span class="inline-flex h-9 w-9 rounded-xl bg-white/10 backdrop-blur-sm items-center justify-center shadow">
+                            <span class="h-2.5 w-2.5 rounded-full bg-[#8a10c5]"></span>
+                        </span>
+                        <span class="font-semibold text-lg tracking-tight">Smart OS</span>
+                    </a>
+                    <div class="hidden md:flex items-center gap-6">
+                          <a class="block py-2 hover:text-[#8a10c5]" href="{% url 'index' %}">Home</a>
+                       <a class="hover:text-[#8a10c5] transition" href="{% url 'cpu_scheduler' %}">CPU Scheduling</a>
+                        <a class="hover:text-[#8a10c5] transition" href="{% url 'pager' %}">Page Replacement</a>
+                        <a class="block py-2 hover:text-[#8a10c5]" href="{% url 'sjf' %}">SJF Prediction</a>
+                     
+
+                    </div>
+                    <button class="md:hidden px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 focus-ring" aria-label="Menu"
+                              onclick="document.getElementById('m').classList.toggle('hidden')">
+                        ☰
+                    </button>
+                </div>
+            </div>
+            <div id="m" class="md:hidden hidden border-t border-white/10">
+                <div class="px-4 py-3 space-y-2">
+                     <a class="block py-2 hover:text-[#8a10c5]" href="{% url 'index' %}">Home</a>
+                    <a class="block py-2 hover:text-[#8a10c5]" href="{% url 'cpu_scheduler' %}">CPU Scheduling</a>
+                    <a class="block py-2 hover:text-[#8a10c5]" href="{% url 'pager' %}">Page Replacement</a>
+                    <a class="block py-2 hover:text-[#8a10c5]" href="{% url 'sjf' %}">SJF Prediction</a>
+                
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="min-h-[70vh]">
+        <div class="max-w-7xl mx-auto px-4 py-12">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="mt-20">
+    <div class="bg-gray-900 text-white">
+        
+        <div class="border-t-4 border-[#8a10c5]">
+            <div class="max-w-7xl mx-auto px-4 py-4">
+                <div class="flex flex-wrap justify-center sm:justify-center items-center gap-y-3 gap-x-6 text-sm font-medium tracking-wide">
+                    
+                    <a href="{% url 'index' %}" 
+                       class="text-gray-300 hover:text-[#8a10c5] transition duration-300 hover:scale-105">
+                        Home
+                    </a>
+                    <span class="text-gray-600">|</span>
+                    <a href="{% url 'cpu_scheduler' %}" 
+                       class="text-gray-300 hover:text-[#8a10c5] transition duration-300 hover:scale-105">
+                        CPU Scheduling
+                    </a>
+                    <span class="text-gray-600">|</span>
+                    <a href="{% url 'sjf' %}" 
+                       class="text-gray-300 hover:text-[#8a10c5] transition duration-300 hover:scale-105">
+                        SJF Prediction
+                    </a>
+                    <span class="text-gray-600">|</span>
+                    <a href="{% url 'pager' %}" 
+                       class="text-gray-300 hover:text-[#8a10c5] transition duration-300 hover:scale-105">
+                        Page Replacement
+                    </a>
+                    
+                    
+                    
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p class="text-sm text-gray-400 opacity-90">&copy; 2025 OS Simulator Project</p>
+            <div class="flex items-center gap-3">
+                <span class="h-3 w-3 rounded-full bg-[#8a10c5] shadow-lg shadow-[#8a10c5]/50 animate-pulse"></span>
+                  </div>
+        </div>
+        
+    </div>
+</footer>
+    
+
+    <script>
+        // smooth anchors
+        document.querySelectorAll('a[href^="#"]').forEach(a=>{
+            a.addEventListener('click', e=>{
+                const id=a.getAttribute('href').slice(1);
+                const el=document.getElementById(id); if(!el) return;
+                e.preventDefault(); el.scrollIntoView({behavior:'smooth', block:'start'});
+            })
+        })
+    </script>
+</body>
+</html>

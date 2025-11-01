@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+
+{% block title %}ML-Predictive CPU Scheduling{% endblock %}
+
+{% block content %}
+<section class="max-w-7xl mx-auto px-4 py-6">
+    <h1 class="text-4xl font-extrabold tracking-tight text-[#010101] mb-6 border-b pb-2 border-gray-200">
+        ML-Predictive CPU Scheduling Simulator
+    </h1>
+
+    <form method="post" id="simulator-form" class="grid lg:grid-cols-3 gap-8">
+        {% csrf_token %}
+
+        <div class="lg:col-span-1 space-y-6">
+            <div class="rounded-3xl bg-white p-6 shadow-xl ring-1 ring-gray-100/50 space-y-4">
+                <h2 class="text-xl font-semibold text-[#010101] border-b pb-3"> Configuration</h2>
+                
+                <div class="flex flex-col gap-1">
+                    <label class="text-sm font-medium text-gray-700">Number of Processes:</label>
+                    <input type="number" name="num_processes" id="num_processes" min="1" max="10" value="3" 
+                            class="w-full rounded-xl border border-gray-300 p-2.5 focus-ring" required/>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-sm font-medium text-gray-700">Your Algorithm:</label>
+                    <select name="user_algo" id="user_algo" class="w-full rounded-xl border border-gray-300 p-2.5 focus-ring">
+                        <option value="FCFS">FCFS (First-Come, First-Served)</option>
+                        <option value="SJF">SJF (Shortest Job First)</option>
+                        <option value="Priority">Priority Scheduling</option>
+                        <option value="Round Robin">Round Robin</option>
+                    </select>
+                </div>
+                
+                <span id="quantum_group" class="flex flex-col gap-1" style="display:none;">
+                    <label class="text-sm font-medium text-gray-700">Time Quantum (for RR):</label>
+                    <input type="number" name="quantum" id="quantum" value="4" min="1" 
+                            class="w-full rounded-xl border border-gray-300 p-2.5 focus-ring"/>
+                </span>
+
+                <button type="button" onclick="window.generateTableManual()" 
+                        class="w-full px-5 py-2.5 rounded-xl bg-gray-100 text-[#010101] hover:bg-gray-200 shadow transition focus-ring border border-gray-300">
+                    Generate/Update Table
+                </button>
+            </div>
+
+            <div class="rounded-3xl bg-white p-6 shadow-xl ring-1 ring-gray-100/50 space-y-4">
+                <h2 class="text-xl font-semibold text-[#010101] border-b pb-3">Process Details</h2>
+                <div id="process_details">
+                    <p class="text-gray-500" id="table-placeholder">Click 'Generate/Update Table' to begin process input.</p>
+                </div>
+            </div>
+
+            <button type="submit" 
+                    class="w-full px-5 py-3 rounded-2xl bg-[#8a10c5] text-white font-bold text-lg hover:opacity-90 shadow-lg shadow-[#8a10c5]/50 transition focus-ring">
+                 Run Simulation & Get Recommendation
+            </button>
+        </div>
+
+        <div class="lg:col-span-2">
+            {% if all_results %}
+            <div class="results-container rounded-3xl p-0 shadow-2xl bg-white border-[#005599]">
+                
+                <div class="flex border-b border-gray-200">
+                    <button type="button" class="tab-button px-6 py-3 text-sm font-medium border-r border-gray-200 
+                            bg-white text-[#010101] border-t border-x border-white" data-tab="metrics">
+                        Metrics & Recommendation
+                    </button>
+                    <button type="button" class="tab-button px-6 py-3 text-sm font-medium border-r border-gray-200 
+                            bg-gray-100 text-gray-600 border-b" data-tab="gantt">
+                        Gantt Charts
+                    </button>
+                    <button type="button" class="tab-button px-6 py-3 text-sm font-medium 
+                            bg-gray-100 text-gray-600 border-b" data-tab="comparison">
+                        Performance Comparison
+                    </button>
+                </div>
+
+                <div id="tab-metrics" class="tab-content p-6 space-y-6">
+                    <h2 class="text-2xl font-bold text-[#003366] mb-4">Metrics & Stable Recommendation</h2>
+                    
+                    <div class="bg-red-50 p-4 border-l-4 border-red-500 rounded-lg shadow-md">
+                        <p class="text-lg font-extrabold text-red-700 flex items-center gap-2">
+                            STABLE RECOMMENDATION 
+                        </p>
+                        <p class="mt-2 text-gray-800">
+                            Based on ML predictions, <strong class="text-red-600">{{ best_ml_algo_name }}</strong> is the optimal algorithm for this workload.
+                        </p>
+                        <p class="text-sm text-gray-600 mt-1">
+                            Reasoning: It can reduce the average waiting time from **{{ user_avg_wait }}** (with '{{ user_algo }}') to **{{ best_avg_wait }}**.
+                        </p>
+                    </div>
+                    
+                    <h3 class="text-xl font-semibold text-gray-800 border-b pb-2">--- PERFORMANCE METRICS ---</h3>
+                    
+                    <div class="space-y-3">
+                        {% for name, result in all_results.items %}
+                        <div class="p-3 rounded-xl {% if 'Your Choice' in name %} bg-yellow-50 border border-yellow-300 {% elif 'ML:' in name %} bg-green-50 border border-green-300 {% else %} bg-white shadow-sm border border-gray-200 {% endif %}">
+                            <p class="font-bold text-lg {% if 'ML:' in name %} text-green-700 {% elif 'Your Choice' in name %} text-yellow-700 {% else %} text-gray-700 {% endif %}">{{ name }}:</p>
+                            {% with avg_wait=result|map:'waiting'|mean|floatformat:"2" avg_turn=result|map:'turnaround'|mean|floatformat:"2" %}
+                            <p class="text-sm text-gray-600">
+                                Avg Waiting Time: <strong class="text-[#8a10c5]">{{ avg_wait }}ms</strong>, 
+                                Avg Turnaround Time: <strong class="text-[#8a10c5]">{{ avg_turn }}ms</strong>
+                            </p>
+                            {% endwith %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div id="tab-gantt" class="tab-content p-6 space-y-6" style="display: none;">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6">Gantt Chart Comparison</h3>
+                    
+                    {% if gantt_base64 %} 
+                    <div class="p-4 bg-white rounded-lg shadow-md border border-gray-200">
+                        <img src="data:image/png;base64,{{ gantt_base64 }}" alt="Combined Gantt Chart" class="w-full h-auto">
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500">Gantt charts will appear here after running the simulation.</p>
+                    {% endif %}
+                </div>
+
+                <div id="tab-comparison" class="tab-content p-6 space-y-6" style="display: none;">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Performance Comparison Chart</h3>
+                    <div class="p-4 bg-white rounded-lg shadow-md border border-gray-200">
+                        <img src="data:image/png;base64,{{ plot_base64 }}" alt="Performance Comparison Chart" class="w-full h-auto">
+                    </div>
+                </div>
+
+            </div>
+            {% else %}
+            <div class="lg:col-span-2 rounded-3xl bg-white p-10 shadow-xl ring-1 ring-gray-100/50 text-center border-dashed border-2 border-gray-300">
+                <p class="text-gray-500 font-medium text-lg">
+                    Input your processes on the left and click 'Run Simulation' to see the performance comparison and ML-based recommendation here.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </form>
+</section>
+
+<script>
+    // CRUCIAL: Get data passed back from the Django view after a POST request.
+    const submittedData = JSON.parse('{{ submitted_data|safe|default:"{}" }}');
+    const isPostBack = Object.keys(submittedData).length > 0;
+    
+    // --- TAB MANAGEMENT FUNCTIONALITY ---
+    function showTab(tabId) {
+        // 1. Hide all tab contents
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.style.display = 'none';
+        });
+
+        // 2. Deactivate all buttons
+        document.querySelectorAll('.tab-button').forEach(button => {
+            // Remove active classes
+            button.classList.remove('bg-white', 'text-[#010101]', 'border-t', 'border-x', 'border-white');
+            // Add inactive classes
+            button.classList.add('bg-gray-100', 'text-gray-600', 'border-b');
+        });
+
+        // 3. Show the requested content
+        document.getElementById(`tab-${tabId}`).style.display = 'block';
+
+        // 4. Activate the corresponding button
+        const activeBtn = document.querySelector(`.tab-button[data-tab="${tabId}"]`);
+        if (activeBtn) {
+            // Add active classes
+            activeBtn.classList.add('bg-white', 'text-[#010101]', 'border-t', 'border-x', 'border-white');
+            // Remove inactive classes
+            activeBtn.classList.remove('bg-gray-100', 'text-gray-600', 'border-b');
+        }
+    }
+
+    // Attach click listeners to tab buttons
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', function() {
+            showTab(this.getAttribute('data-tab'));
+        });
+    });
+    // ------------------------------------
+
+    // Function to toggle Quantum input for Round Robin
+    function toggleQuantum() {
+        if ($('#user_algo').val() === "Round Robin") {
+            $('#quantum_group').show();
+        } else {
+            $('#quantum_group').hide();
+        }
+    }
+    
+    /**
+     * Dynamically generates the process input table.
+     * @param {Object|null} prefillData - Data object containing P{i}_arrival, P{i}_burst, etc., for repopulation.
+     */
+    function generateTable(prefillData = null) {
+        // Read values from the Configuration section (not submittedData)
+        const numProcesses = parseInt($('#num_processes').val());
+        const algo = $('#user_algo').val();
+        const $details = $('#process_details');
+        
+        if (isNaN(numProcesses) || numProcesses < 1 || numProcesses > 10) {
+            alert("Please enter a number between 1 and 10.");
+            return;
+        }
+
+        let headers = ["Process ID", "Arrival Time", "Burst Time"];
+        if (algo === "Priority") {
+            headers.push("Priority");
+        }
+        
+        let tableHtml = `<div class="overflow-x-auto"><table class="table-input w-full text-sm">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    ${headers.map(h => `<th class="py-2 px-3 font-medium text-gray-600">${h}</th>`).join('')}
+                </tr>
+            </thead>
+            <tbody>`;
+
+        for (let i = 1; i <= numProcesses; i++) {
+            // Check prefillData for existing values, falling back to empty string
+            const arrivalValue = prefillData ? (prefillData[`P${i}_arrival`] || "") : "";
+            const burstValue = prefillData ? (prefillData[`P${i}_burst`] || "") : "";
+            const priorityValue = prefillData ? (prefillData[`P${i}_priority`] || "") : "";
+
+            // Use the determined values. If prefillData is null (manual click), values will be "".
+            tableHtml += `<tr class="border-b border-gray-100 hover:bg-gray-50">
+                <td class="py-2 px-3 font-medium">P${i}</td>
+                <td class="py-2 px-3"><input type="number" name="P${i}_arrival" value="${arrivalValue}" placeholder="e.g., 0" min="0" required 
+                    class="w-16 text-center border rounded-md p-1 focus-ring text-sm" style="width: 60px;"></td>
+                <td class="py-2 px-3"><input type="number" name="P${i}_burst" value="${burstValue}" placeholder="e.g., 8" min="1" required 
+                    class="w-16 text-center border rounded-md p-1 focus-ring text-sm" style="width: 60px;"></td>`;
+
+            if (algo === "Priority") {
+                tableHtml += `<td class="py-2 px-3"><input type="number" name="P${i}_priority" value="${priorityValue}" placeholder="e.g., 1" min="1" required 
+                    class="w-16 text-center border rounded-md p-1 focus-ring text-sm" style="width: 60px;"></td>`;
+            }
+            tableHtml += `</tr>`;
+        }
+        
+        tableHtml += `</tbody></table></div>`;
+        $details.html(tableHtml);
+    }
+    
+    // Function exposed to the "Generate/Update Table" button
+    window.generateTableManual = function() {
+        generateTable(null);
+    };
+
+    // Event Handler: Algorithm Change 
+    $('#user_algo').change(function() {
+        toggleQuantum();
+        generateTable(null);
+    });
+
+    // Event Handler: Window Load (initial setup and post-back restore)
+    $(document).ready(function() {
+        // Restore table input on POST-back
+        if (isPostBack) {
+            // Ensure jQuery is loaded for these calls to work
+            if (typeof $ !== 'undefined') {
+                $('#num_processes').val(submittedData['num_processes']);
+                $('#user_algo').val(submittedData['user_algo']);
+                $('#quantum').val(submittedData['quantum']);
+                
+                toggleQuantum();
+                generateTable(submittedData);
+                
+                // Auto-select the Metrics tab on page load after submission
+                showTab('metrics');
+            }
+        } else {
+            // Initial GET request load:
+            if (typeof $ !== 'undefined') {
+                toggleQuantum();
+                // IMPORTANT: If not a post-back, force the 'metrics' tab to show
+                showTab('metrics');
+            }
+        }
+    });
+
+    // Client-Side Validation to require table generation before submission
+    $('#simulator-form').on('submit', function(e) {
+        if ($('#process_details').find('#table-placeholder').length > 0) {
+            alert('🛑 Please click "Generate/Update Table" to input your process details before running the simulation.');
+            e.preventDefault();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Home - OS Simulator{% endblock %}
+
+{% block content %}
+<section class="bg-gradient-to-br from-white via-white to-[#8a10c5]/10">
+    <div class="max-w-7xl mx-auto px-4 py-16 lg:py-24">
+        <div class="grid lg:grid-cols-2 gap-10 items-center">
+            
+            <div>
+                <h1 class="text-4xl font-extrabold tracking-tight text-[#010101]">
+                    Predictive Scheduling & <span class="text-[#8a10c5]">Page Replacement</span>
+                </h1>
+                <p class="mt-4 text-gray-600 max-w-xl">
+                    Run ML-guided simulations, visualize Gantt charts, and compare with FCFS, SJF, RR, SRTF, LRU, FIFO, OPT.
+                </p>
+                <div class="mt-8 flex flex-wrap gap-4">
+                    <a href="{% url 'cpu_scheduler' %}"
+                       class="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-[#8a10c5] text-white shadow hover:shadow-md hover:translate-y-[-1px] transition focus-ring">
+                        Try CPU Scheduling
+                    </a>
+                    <a href="{% url 'pager' %}"
+                       class="inline-flex items-center justify-center px-6 py-3 rounded-xl border border-[#8a10c5] text-[#8a10c5] bg-white hover:bg-[#8a10c5]/5 transition focus-ring">
+                        Try Page Replacement
+                    </a>
+                </div>
+            </div>
+            
+            <div class="flex justify-center h-full">
+                <div class="w-full max-w-md h-[400px] relative">
+                    <div class="absolute -inset-6 bg-gradient-to-tr from-[#8a10c5]/20 to-transparent rounded-3xl blur-2xl"></div>
+
+                    <div class="relative rounded-3xl bg-white/80 backdrop-blur-md shadow-2xl p-4 ring-1 ring-black/5 flex flex-col h-full">
+                        
+                        <div class="rounded-xl p-3 mb-3 bg-[#8a10c5] text-white shadow-lg">
+                            <p class="text-base font-bold text-center">OS Tutor</p>
+                        </div>
+
+                        <div id="chat-window" class="flex-grow overflow-y-auto bg-gray-50 rounded-lg p-3 mb-3 border border-gray-200 text-sm">
+                            <p class="mb-2">
+                                <span class="font-semibold text-green-600">Bot:</span> 
+                                Hello! Ask me anything about OS concepts like scheduling or memory management!
+                            </p>
+                        </div>
+
+                        <div class="flex space-x-2">
+                            <input 
+                                type="text" 
+                                id="user-input"
+                                placeholder="What is Jain's Index?"
+                                class="flex-grow p-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-[#8a10c5] focus:border-transparent outline-none text-sm"
+                            >
+                            
+                            <button 
+                                id="send-button"
+                                onclick="sendMessage()"
+                                class="bg-[#8a10c5] hover:bg-[#6c0ba0] text-white font-bold py-2 px-5 rounded-full transition duration-150 text-sm"
+                            >
+                                Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</section>
+
+<script>
+    // Include the JavaScript functions for sendMessage, clearChat, and CSRF handling 
+    // from the previous complete response here. 
+    // Since this is a partial template, you'd paste the <script> block 
+    // from the prior 'chatbot.html' response here.
+</script>
+{% endblock content %}
