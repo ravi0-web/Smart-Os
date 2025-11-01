@@ -1,2 +1,1 @@
-
-web: gunicorn stats.wsgi --log-file -
+gunicorn PRD.wsgi:application --bind 0.0.0.0:$PORT
