@@ -156,7 +156,7 @@ python-multipart==0.0.20
 python-slugify==8.0.4
 python-version==0.0.2
 pytz==2025.2
-pywin32==310
+
 pywinpty==2.0.15
 PyYAML==6.0.2
 pyzmq==26.4.0
