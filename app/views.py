@@ -264,3 +264,70 @@ def sjf(request):
 
 def index(request):
     return render(request, "index.html")
+# ==============================================
+# SMART OS → RULE-BASED CHATBOT (No OpenAI API)
+# ==============================================
+
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import json
+import re
+
+@csrf_exempt
+def chatbot_api(request):
+    """Smart OS → Learning-based (Rule-based) Chatbot"""
+    if request.method != "POST":
+        return JsonResponse({"response": "Invalid request"}, status=405)
+
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+        user_msg = data.get("message", "").lower().strip()
+
+        if not user_msg:
+            return JsonResponse({"response": "Please ask a question about Operating Systems!"})
+
+        # --- RULE-BASED KNOWLEDGE BASE ---
+        responses = {
+            "what is operating system": "An Operating System (OS) is system software that manages computer hardware, software resources, and provides services for computer programs.",
+            "functions of operating system": "Main functions of an OS include process management, memory management, file management, device management, and security.",
+            "types of operating system": "Common types: Batch OS, Time-Sharing OS, Distributed OS, Real-Time OS, and Embedded OS.",
+            "cpu scheduling": "CPU Scheduling is the process of selecting which process gets to use the CPU next to improve CPU utilization and system response.",
+            "scheduling algorithms": "Common CPU scheduling algorithms include FCFS (First Come First Serve), SJF (Shortest Job First), Priority Scheduling, and Round Robin.",
+            "fcfs": "FCFS (First Come First Serve) is the simplest scheduling algorithm where the process that arrives first is executed first.",
+            "sjf": "SJF (Shortest Job First) schedules the process with the smallest burst time next. It can be preemptive or non-preemptive.",
+            "priority scheduling": "In Priority Scheduling, each process is assigned a priority. The CPU is allocated to the process with the highest priority.",
+            "round robin": "Round Robin scheduling gives each process a fixed time slot (quantum) in a cyclic order, ensuring fairness.",
+            "deadlock": "A deadlock occurs when a set of processes are blocked because each process is holding a resource and waiting for another.",
+            "deadlock conditions": "Four necessary conditions for deadlock: Mutual Exclusion, Hold and Wait, No Preemption, and Circular Wait.",
+            "memory management": "Memory management handles allocation and deallocation of main memory for processes.",
+            "paging": "Paging divides memory into fixed-size blocks called pages (logical memory) and frames (physical memory). It helps in efficient memory utilization.",
+            "segmentation": "Segmentation divides memory into variable-sized segments based on program logic like functions, arrays, etc.",
+            "virtual memory": "Virtual Memory allows execution of processes not completely in main memory by using secondary storage as an extension of RAM.",
+            "page replacement algorithms": "Examples: FIFO, LRU, Optimal Page Replacement — used to decide which page to remove when new pages are needed.",
+            "banker's algorithm": "Banker's Algorithm is used to avoid deadlock by checking the safe state before allocating resources.",
+            "thrashing": "Thrashing occurs when excessive paging reduces CPU performance due to constant swapping of pages.",
+            "semaphore": "A semaphore is a synchronization tool used to solve critical section problems and avoid race conditions.",
+            "critical section": "A critical section is a code segment where shared resources are accessed. Synchronization is used to prevent conflicts.",
+            "file system": "The file system manages how data is stored and retrieved on disks. Examples: FAT32, NTFS, EXT4.",
+            "os examples": "Examples of operating systems: Windows, Linux, macOS, Android, and iOS."
+        }
+
+        # --- MATCH USER INPUT ---
+        response = None
+        for key, value in responses.items():
+            if re.search(key, user_msg):
+                response = value
+                break
+
+        if not response:
+            response = (
+                "I'm still learning! Please ask something related to Operating System concepts "
+                "(like CPU scheduling, memory management, deadlock, or paging)."
+            )
+
+        return JsonResponse({"response": response})
+
+    except Exception as e:
+        print("Chatbot error:", e)
+        return JsonResponse({"response": "⚠️ Something went wrong on the server."})
+    
