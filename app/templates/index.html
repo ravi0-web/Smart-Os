@@ -196,6 +196,13 @@
             chatWindow.scrollTop = chatWindow.scrollHeight;
         });
     }
+        // --- Enable Enter key to send message ---
+document.getElementById("user-input").addEventListener("keypress", function (e) {
+    if (e.key === "Enter") {
+        e.preventDefault(); 
+        sendMessage(); 
+    }
+});
     
     // --- Knowledge Slider Functions ---
     const slider = document.getElementById('knowledge-slider');
