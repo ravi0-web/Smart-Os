@@ -3,6 +3,71 @@
 {% block title %}ML-Predictive SJF Burst Time Prediction{% endblock %}
 
 {% block content %}
+<style>
+    /* ======== GLOBAL FIXES ======== */
+    html, body {
+        height: 100%;
+        margin: 0;
+        overflow-x: hidden;
+        background-color: #f9fafb;
+    }
+
+    section {
+        min-height: calc(100vh - 150px);
+        overflow-y: auto;
+        padding-bottom: 60px;
+    }
+
+    nav {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: linear-gradient(to right, #8a10c5, #4b0082);
+    }
+
+    footer {
+        position: sticky;
+        bottom: 0;
+        background: #fff;
+        border-top: 1px solid #e5e7eb;
+        text-align: center;
+        padding: 12px 0;
+        color: #555;
+    }
+
+    /* ======== RESULTS CONTAINER ======== */
+    .results-container {
+        max-height: 75vh;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #8a10c5 #f3f4f6;
+    }
+    .results-container::-webkit-scrollbar {
+        width: 8px;
+    }
+    .results-container::-webkit-scrollbar-thumb {
+        background-color: #8a10c5;
+        border-radius: 6px;
+    }
+    .results-container::-webkit-scrollbar-track {
+        background-color: #f3f4f6;
+    }
+
+    /* ======== TABLE + CONTENT ADJUSTMENTS ======== */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        text-align: center;
+        padding: 8px;
+    }
+    img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+    }
+</style>
 <section class="max-w-7xl mx-auto px-4 py-10">
     <h1 class="text-4xl font-extrabold tracking-tight text-[#010101] mb-8 border-b pb-3 border-gray-200">
         SJF Burst Time Prediction (ML) 🧠
