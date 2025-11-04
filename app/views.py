@@ -287,9 +287,10 @@ def chatbot_api(request):
             return JsonResponse({"response": "Please ask a question about Operating Systems!"})
 
         # --- RULE-BASED KNOWLEDGE BASE ---
-    responses={
+        responses={
     # Basics
-    "  operating system","os": "An OS manages hardware, executes programs, and acts as an interface between user and machine.",
+    "  operating system": "An OS manages hardware, executes programs, and acts as an interface between user and machine.",
+    "os": "An OS manages hardware, executes programs, and acts as an interface between user and machine.",
     "functions of operating system": "Key functions: process management, memory management, file system management, device management, I/O control, and security.",
     "goals of os": "Primary goals are convenience, efficiency, and ability to evolve.",
     "types of operating system": "Types: Batch OS, Time-Sharing OS, Distributed OS, Real-Time OS, Network OS, Mobile OS, and Embedded OS.",
