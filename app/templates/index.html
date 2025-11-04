@@ -1,61 +1,66 @@
 {% extends "base.html" %}
-{% block title %}Home - OS Simulator{% endblock %}
+{% block title %}Dashboard - OS Simulator{% endblock %}
 
 {% block content %}
-<section class="bg-gradient-to-br from-white via-white to-[#8a10c5]/10">
-    <div class="max-w-7xl mx-auto px-4 py-16 lg:py-24">
-        <div class="grid lg:grid-cols-2 gap-10 items-center">
+<main class="min-h-screen bg-gray-50">
+
+<section class="bg-gradient-to-br from-white via-white to-[#8a10c5]/10 pt-16 pb-20 lg:pt-24 lg:pb-32 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="grid lg:grid-cols-2 gap-12 items-center">
             
             <div>
-                <h1 class="text-4xl font-extrabold tracking-tight text-[#010101]">
-                    Predictive Scheduling & <span class="text-[#8a10c5]">Page Replacement</span>
+                <span class="text-sm font-semibold uppercase tracking-wider text-[#8a10c5]">OS Simulation Suite</span>
+                <h1 class="mt-2 text-5xl font-extrabold tracking-tight text-[#010101] sm:text-6xl">
+                    Predictive Scheduling & <span class="text-[#8a10c5]">Memory Management</span>
                 </h1>
-                <p class="mt-4 text-gray-600 max-w-xl">
-                    Run ML-guided simulations, visualize Gantt charts, and compare with FCFS, SJF, RR, SRTF, LRU, FIFO, OPT.
+                <p class="mt-6 text-lg text-gray-700 max-w-xl">
+                    Explore **Machine Learning-guided** simulations. Visualize processes with **Gantt charts** and compare performance across classic CPU and Page Replacement algorithms.
                 </p>
-                <div class="mt-8 flex flex-wrap gap-4">
+                
+                <div class="mt-10 flex flex-wrap gap-4">
                     <a href="{% url 'cpu_scheduler' %}"
-                       class="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-[#8a10c5] text-white shadow hover:shadow-md hover:translate-y-[-1px] transition focus-ring">
-                        Try CPU Scheduling
+                       class="inline-flex items-center justify-center px-8 py-4 text-lg rounded-xl bg-[#8a10c5] text-white font-semibold shadow-xl shadow-[#8a10c5]/30 hover:shadow-2xl hover:bg-[#6c0ba0] transform hover:scale-[1.02] transition duration-300 focus-ring">
+                        Start CPU Scheduling
                     </a>
                     <a href="{% url 'pager' %}"
-                       class="inline-flex items-center justify-center px-6 py-3 rounded-xl border border-[#8a10c5] text-[#8a10c5] bg-white hover:bg-[#8a10c5]/5 transition focus-ring">
-                        Try Page Replacement
+                       class="inline-flex items-center justify-center px-8 py-4 text-lg rounded-xl border-2 border-[#8a10c5] text-[#8a10c5] bg-white font-semibold hover:bg-[#8a10c5]/10 transition duration-300 focus-ring">
+                         Start Page Replacement
                     </a>
                 </div>
             </div>
             
-            <div class="flex justify-center h-full">
-                <div class="w-full max-w-md h-[400px] relative">
-                    <div class="absolute -inset-6 bg-gradient-to-tr from-[#8a10c5]/20 to-transparent rounded-3xl blur-2xl"></div>
+            <div class="flex justify-center lg:justify-end h-full">
+                <div class="w-full max-w-md h-[450px] relative">
+                    <div class="absolute -inset-8 bg-gradient-to-tr from-[#8a10c5]/20 to-transparent rounded-[2.5rem] blur-3xl opacity-50"></div>
 
-                    <div class="relative rounded-3xl bg-white/80 backdrop-blur-md shadow-2xl p-4 ring-1 ring-black/5 flex flex-col h-full">
+                    <div class="relative rounded-[2rem] bg-white/90 backdrop-blur-lg shadow-2xl p-6 ring-2 ring-[#8a10c5]/10 flex flex-col h-full transition-all duration-500 hover:shadow-3xl">
                         
-                        <div class="rounded-xl p-3 mb-3 bg-[#8a10c5] text-white shadow-lg">
-                            <p class="text-base font-bold text-center">OS Tutor</p>
+                        <div class="rounded-xl p-3 mb-4 bg-[#8a10c5] text-white shadow-xl flex items-center justify-center space-x-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            <p class="text-lg font-bold">OS Tutor AI</p>
                         </div>
 
-                        <div id="chat-window" class="flex-grow overflow-y-auto bg-gray-50 rounded-lg p-3 mb-3 border border-gray-200 text-sm">
-                            <p class="mb-2">
-                                <span class="font-semibold text-green-600">Bot:</span> 
-                                Hello! Ask me anything about OS concepts like scheduling or memory management!
+                        <div id="chat-window" class="flex-grow overflow-y-auto bg-white rounded-xl p-4 mb-4 border border-gray-200 text-sm shadow-inner transition-all duration-300">
+                            <p class="mb-3 p-2 bg-green-50 rounded-lg">
+                                <span class="font-bold text-green-700">Bot:</span> 
+                                Welcome to your OS Dashboard! Ask me anything about CPU scheduling, page replacement, or any core OS concept.
                             </p>
                         </div>
 
-                        <div class="flex space-x-2">
+                        <div class="flex space-x-3">
                             <input 
                                 type="text" 
                                 id="user-input"
-                                placeholder="What is Jain's Index?"
-                                class="flex-grow p-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-[#8a10c5] focus:border-transparent outline-none text-sm"
+                                placeholder="e.g., Explain Shortest Job First (SJF)"
+                                class="flex-grow p-3 border-2 border-gray-200 rounded-full focus:ring-4 focus:ring-[#8a10c5]/50 focus:border-[#8a10c5] outline-none text-sm transition duration-200"
                             >
                             
                             <button 
                                 id="send-button"
                                 onclick="sendMessage()"
-                                class="bg-[#8a10c5] hover:bg-[#6c0ba0] text-white font-bold py-2 px-5 rounded-full transition duration-150 text-sm"
+                                class="bg-[#8a10c5] hover:bg-[#6c0ba0] text-white font-bold py-3 px-6 rounded-full transition duration-200 text-sm shadow-md"
                             >
-                                Send
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                             </button>
                         </div>
                     </div>
@@ -66,10 +71,180 @@
     </div>
 </section>
 
+---
+
+<section class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4">
+        <h2 class="text-3xl font-extrabold text-center text-[#010101] mb-12">
+             Your Daily OS Concept
+        </h2>
+
+        <div class="relative overflow-hidden rounded-2xl shadow-2xl ring-4 ring-[#8a10c5]/10 bg-white">
+            <div id="knowledge-slider" class="flex transition-transform duration-700 ease-in-out">
+                <div class="flex-shrink-0 w-full p-8 lg:p-12 text-center" data-concept="cpu-scheduling">
+                    <h3 class="text-2xl font-bold text-[#8a10c5] mb-4">CPU Scheduling: The Core of Multitasking</h3>
+                    <p class="text-gray-600 lg:text-lg max-w-3xl mx-auto">
+                        It determines which process gets to execute next on the CPU. Key goal: **maximize CPU utilization** while **minimizing response time**. Algorithms like **Round Robin (RR)** use time slicing for fairness, while **Shortest Job First (SJF)** optimizes for minimum average waiting time.
+                    </p>
+                </div>
+
+                <div class="flex-shrink-0 w-full p-8 lg:p-12 text-center" data-concept="page-replacement">
+                    <h3 class="text-2xl font-bold text-[#8a10c5] mb-4">Page Replacement: Managing Virtual Memory</h3>
+                    <p class="text-gray-600 lg:text-lg max-w-3xl mx-auto">
+                        When a page fault occurs (requested page is not in RAM), a page must be selected to be swapped out. Algorithms like **LRU (Least Recently Used)** try to predict the future by looking at the past, while **FIFO (First-In, First-Out)** is the simplest but often performs poorly.
+                    </p>
+                </div>
+
+                <div class="flex-shrink-0 w-full p-8 lg:p-12 text-center" data-concept="predictive-ml">
+                    <h3 class="text-2xl font-bold text-[#8a10c5] mb-4">ML in OS: Beyond Classic Heuristics</h3>
+                    <p class="text-gray-600 lg:text-lg max-w-3xl mx-auto">
+                        Traditional algorithms use fixed rules. Our simulator explores how **Machine Learning** models can learn from process history to make **smarter, predictive decisions** for scheduling and page replacement, potentially outperforming fixed-rule algorithms.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-center mt-6 space-x-3">
+            <button class="w-3 h-3 rounded-full bg-[#8a10c5] opacity-100 transition duration-300" data-slide="0"></button>
+            <button class="w-3 h-3 rounded-full bg-gray-300 hover:bg-gray-400 transition duration-300" data-slide="1"></button>
+            <button class="w-3 h-3 rounded-full bg-gray-300 hover:bg-gray-400 transition duration-300" data-slide="2"></button>
+        </div>
+    </div>
+</section>
+
+</main>
+
 <script>
-    // Include the JavaScript functions for sendMessage, clearChat, and CSRF handling 
-    // from the previous complete response here. 
-    // Since this is a partial template, you'd paste the <script> block 
-    // from the prior 'chatbot.html' response here.
+    // --- CSRF Token Handler ---
+    function getCsrfToken() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 'csrftoken'.length + 1) === ('csrftoken' + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring('csrftoken'.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // --- Main Chatbot Function (AJAX Call) ---
+    function sendMessage() {
+        const userInput = document.getElementById('user-input');
+        const chatWindow = document.getElementById('chat-window');
+        const message = userInput.value.trim();
+
+        if (message === "") return;
+
+        // 1. Display user message
+        chatWindow.innerHTML += `
+            <p class="mb-3 p-2 bg-blue-100 rounded-xl text-right max-w-[85%] ml-auto shadow-sm">
+                <span class="font-bold text-blue-700">You:</span> ${message}
+            </p>
+        `;
+        userInput.value = '';
+        chatWindow.scrollTop = chatWindow.scrollHeight; 
+
+        // 2. Display 'Typing...' placeholder while waiting for AI
+        const botPlaceholder = document.createElement('p');
+        botPlaceholder.className = "mb-3 p-2 bg-gray-100 rounded-xl max-w-[85%] shadow-sm text-gray-500 italic";
+        botPlaceholder.innerHTML = `<span class="font-bold text-gray-700">Bot:</span> Typing...`;
+        botPlaceholder.id = 'bot-placeholder';
+        chatWindow.appendChild(botPlaceholder);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+
+        // 3. AJAX Request (Fetch API) - This is the REAL part
+        fetch("{% url 'chatbot_api' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken() 
+            },
+            body: JSON.stringify({ message: message })
+        })
+        .then(response => {
+            // Remove placeholder regardless of success/fail
+            document.getElementById('bot-placeholder').remove();
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // 4. Display AI response
+            const botResponse = data.response || "Sorry, I couldn't get a response.";
+            // Sanitize and format the response if needed, for now just text
+            chatWindow.innerHTML += `
+                <p class="mb-3 p-2 bg-green-50 rounded-xl max-w-[85%] shadow-sm">
+                    <span class="font-bold text-green-700">Bot:</span> ${botResponse}
+                </p>
+            `;
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        })
+        .catch(error => {
+            console.error('AJAX Error:', error);
+            // 5. Display error message
+            chatWindow.innerHTML += `
+                <p class="mb-3 p-2 bg-red-100 rounded-xl max-w-[85%] shadow-sm">
+                    <span class="font-bold text-red-700">Bot Error:</span> Could not connect. Check network and API key.
+                </...
+            `;
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        });
+    }
+    
+    // --- Knowledge Slider Functions ---
+    const slider = document.getElementById('knowledge-slider');
+    const slides = slider.children.length;
+    const dots = document.querySelectorAll('[data-slide]');
+    let currentSlide = 0;
+
+    function goToSlide(index) {
+        if (index < 0) index = slides - 1;
+        if (index >= slides) index = 0;
+        
+        currentSlide = index;
+        const offset = -currentSlide * 100;
+        slider.style.transform = `translateX(${offset}%)`;
+
+        // Update dots
+        dots.forEach((dot, i) => {
+            if (i === currentSlide) {
+                dot.classList.remove('bg-gray-300', 'hover:bg-gray-400');
+                dot.classList.add('bg-[#8a10c5]', 'opacity-100');
+            } else {
+                dot.classList.remove('bg-[#8a10c5]', 'opacity-100');
+                dot.classList.add('bg-gray-300', 'hover:bg-gray-400');
+            }
+        });
+    }
+
+    // Initialize dots for navigation
+    dots.forEach(dot => {
+        dot.addEventListener('click', () => {
+            goToSlide(parseInt(dot.getAttribute('data-slide')));
+            resetInterval();
+        });
+    });
+
+    // Auto-advance the slider
+    let slideInterval = setInterval(() => {
+        goToSlide(currentSlide + 1);
+    }, 8000); // Change slide every 8 seconds
+
+    function resetInterval() {
+        clearInterval(slideInterval);
+        slideInterval = setInterval(() => {
+            goToSlide(currentSlide + 1);
+        }, 8000);
+    }
+
+    // Initial slide setting
+    goToSlide(0);
+
 </script>
 {% endblock content %}
