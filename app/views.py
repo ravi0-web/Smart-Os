@@ -287,30 +287,86 @@ def chatbot_api(request):
             return JsonResponse({"response": "Please ask a question about Operating Systems!"})
 
         # --- RULE-BASED KNOWLEDGE BASE ---
-        responses = {
-            "what is operating system": "An Operating System (OS) is system software that manages computer hardware, software resources, and provides services for computer programs.",
-            "functions of operating system": "Main functions of an OS include process management, memory management, file management, device management, and security.",
-            "types of operating system": "Common types: Batch OS, Time-Sharing OS, Distributed OS, Real-Time OS, and Embedded OS.",
-            "cpu scheduling": "CPU Scheduling is the process of selecting which process gets to use the CPU next to improve CPU utilization and system response.",
-            "scheduling algorithms": "Common CPU scheduling algorithms include FCFS (First Come First Serve), SJF (Shortest Job First), Priority Scheduling, and Round Robin.",
-            "fcfs": "FCFS (First Come First Serve) is the simplest scheduling algorithm where the process that arrives first is executed first.",
-            "sjf": "SJF (Shortest Job First) schedules the process with the smallest burst time next. It can be preemptive or non-preemptive.",
-            "priority scheduling": "In Priority Scheduling, each process is assigned a priority. The CPU is allocated to the process with the highest priority.",
-            "round robin": "Round Robin scheduling gives each process a fixed time slot (quantum) in a cyclic order, ensuring fairness.",
-            "deadlock": "A deadlock occurs when a set of processes are blocked because each process is holding a resource and waiting for another.",
-            "deadlock conditions": "Four necessary conditions for deadlock: Mutual Exclusion, Hold and Wait, No Preemption, and Circular Wait.",
-            "memory management": "Memory management handles allocation and deallocation of main memory for processes.",
-            "paging": "Paging divides memory into fixed-size blocks called pages (logical memory) and frames (physical memory). It helps in efficient memory utilization.",
-            "segmentation": "Segmentation divides memory into variable-sized segments based on program logic like functions, arrays, etc.",
-            "virtual memory": "Virtual Memory allows execution of processes not completely in main memory by using secondary storage as an extension of RAM.",
-            "page replacement algorithms": "Examples: FIFO, LRU, Optimal Page Replacement — used to decide which page to remove when new pages are needed.",
-            "banker's algorithm": "Banker's Algorithm is used to avoid deadlock by checking the safe state before allocating resources.",
-            "thrashing": "Thrashing occurs when excessive paging reduces CPU performance due to constant swapping of pages.",
-            "semaphore": "A semaphore is a synchronization tool used to solve critical section problems and avoid race conditions.",
-            "critical section": "A critical section is a code segment where shared resources are accessed. Synchronization is used to prevent conflicts.",
-            "file system": "The file system manages how data is stored and retrieved on disks. Examples: FAT32, NTFS, EXT4.",
-            "os examples": "Examples of operating systems: Windows, Linux, macOS, Android, and iOS."
-        }
+      responses={
+    # Basics
+    "what is operating system": "An OS manages hardware, executes programs, and acts as an interface between user and machine.",
+    "functions of operating system": "Key functions: process management, memory management, file system management, device management, I/O control, and security.",
+    "goals of os": "Primary goals are convenience, efficiency, and ability to evolve.",
+    "types of operating system": "Types: Batch OS, Time-Sharing OS, Distributed OS, Real-Time OS, Network OS, Mobile OS, and Embedded OS.",
+    "os examples": "Windows, Linux, macOS, Android, iOS are popular OS examples.",
+    
+    # CPU Scheduling
+    "cpu scheduling": "CPU scheduling decides which process runs next to optimize CPU usage.",
+    "scheduling algorithms": "FCFS, SJF, Round Robin, Priority, Multilevel Queue, and Multilevel Feedback Queue.",
+    "fcfs": "FCFS executes tasks in arrival order. Simple but causes long wait times.",
+    "sjf": "SJF chooses the shortest burst time first. Minimizes waiting time but hard to predict burst time.",
+    "preemptive sjf": "Also called SRTF — process with shortest remaining time gets CPU.",
+    "round robin": "RR gives each process equal time slices. Great for time-sharing systems.",
+    "priority scheduling": "CPU goes to highest-priority task. Lower priority tasks may starve.",
+    "aging in os": "Aging prevents starvation by gradually increasing process priority.",
+    "mlfq": "Multilevel Feedback Queue combines multiple queues and moves processes between them based on behavior.",
+    
+    # Process & Threads
+    "process": "A program in execution with its own memory and resources.",
+    "thread": "Lightweight process sharing memory with parent process.",
+    "difference between process and thread": "Process has its own memory; thread shares memory with others in same process.",
+    "pcb": "PCB (Process Control Block) stores process information like registers, memory, and states.",
+    "process states": "New, Ready, Running, Waiting, Terminated.",
+    "context switching": "Saving CPU state of a running process and loading another. Adds overhead.",
+    
+    # Synchronization
+    "critical section": "Section of code accessing shared resources — must avoid race conditions.",
+    "race condition": "Occurs when multiple processes access shared data simultaneously leading to inconsistency.",
+    "semaphore": "Semaphore controls access to resources via signaling (wait, signal).",
+    "mutex": "A mutex is a lock allowing one thread to access a resource at a time.",
+    "difference between mutex and semaphore": "Mutex = single lock; Semaphore = signaling mechanism, allows multiple access levels.",
+    "deadlock": "Processes wait forever due to circular resource holding.",
+    "deadlock conditions": "Mutual exclusion, hold & wait, no preemption, circular wait.",
+    "deadlock prevention": "Break one of the 4 deadlock conditions.",
+    "deadlock avoidance": "Banker's Algorithm checks for safe state.",
+    
+    # Memory Management
+    "memory management": "Manages RAM allocation, deallocation, and protection.",
+    "paging": "Memory divided into fixed-size pages and frames.",
+    "page table": "Maps logical pages to physical frames.",
+    "segmentation": "Memory division based on program structure (variable size segments).",
+    "virtual memory": "Lets processes run even if not fully in RAM using disk space.",
+    "tlb": "Translation Lookaside Buffer stores recent page table entries for fast lookup.",
+    "fragmentation": "Memory waste. Internal fragmentation = inside allocated block; External = scattered small free blocks.",
+    "thrashing": "Too much paging → low CPU usage and slow system.",
+    
+    # Page Replacement
+    "page replacement algorithms": "FIFO, LRU, Optimal, Clock, LFU.",
+    "fifo": "Replaces oldest loaded page. Simple but suffers Belady's anomaly.",
+    "lru": "Least Recently Used — predicts future based on past usage.",
+    "optimal replacement": "Replaces page not needed for longest future time (theoretically best).",
+    "clock algorithm": "Second-chance FIFO using circular pointer.",
+    
+    # File System
+    "file system": "Manages how data is stored and accessed on disk.",
+    "file allocation methods": "Contiguous, Linked, Indexed Allocation.",
+    "directory structure": "Single-level, Two-level, Tree-structured, Acyclic, General graph.",
+    "inode": "Linux structure storing file metadata, not filename.",
+    
+    # I/O & Devices
+    "device driver": "Software that helps OS communicate with hardware.",
+    "spooling": "Buffering data for devices like printers while CPU continues work.",
+    "dma": "Direct Memory Access lets devices transfer data to memory without CPU intervention.",
+    
+    # Security
+    "os security": "Protects system from unauthorized access and attacks.",
+    "authentication vs authorization": "Authentication verifies identity; authorization grants access rights.",
+    
+    # Linux / Commands
+    "linux": "Open-source UNIX-like OS widely used for servers and programming.",
+    "kernel vs shell": "Kernel manages hardware; Shell is command interface.",
+    "common linux commands": "ls, cd, mkdir, rm, ps, grep, chmod, top",
+    
+    # Misc
+    "system call": "Interface between user programs and OS kernel.",
+    "bootstrap": "Bootstrapping loads OS from disk to RAM at startup.",
+    "interrupt": "Signal that temporarily stops CPU to handle events."
+}
 
         # --- MATCH USER INPUT ---
         response = None
