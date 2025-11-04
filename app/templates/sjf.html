@@ -1,250 +1,400 @@
 {% extends "base.html" %}
-{% block title %}Dashboard - OS Simulator{% endblock %}
+{% load custom_filters %}
+{% block title %}ML-Predictive SJF Burst Time Prediction{% endblock %}
 
 {% block content %}
-<main class="min-h-screen bg-gray-50">
+<style>
+    /* ======== GLOBAL FIXES ======== */
+    html, body {
+        height: 100%;
+        margin: 0;
+        overflow-x: hidden;
+        background-color: #f9fafb;
+    }
 
-<section class="bg-gradient-to-br from-white via-white to-[#8a10c5]/10 pt-16 pb-20 lg:pt-24 lg:pb-32 shadow-lg">
-    <div class="max-w-7xl mx-auto px-4">
-        <div class="grid lg:grid-cols-2 gap-12 items-center">
+    section {
+        min-height: calc(100vh - 150px);
+        overflow-y: auto;
+        padding-bottom: 60px;
+    }
+
+    nav {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: linear-gradient(to right, #8a10c5, #4b0082);
+    }
+
+    footer {
+        position: sticky;
+        bottom: 0;
+        background: #fff;
+        border-top: 1px solid #e5e7eb;
+        text-align: center;
+        padding: 12px 0;
+        color: #555;
+    }
+
+    /* ======== RESULTS CONTAINER ======== */
+    .results-container {
+        max-height: 75vh;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #8a10c5 #f3f4f6;
+    }
+    .results-container::-webkit-scrollbar {
+        width: 8px;
+    }
+    .results-container::-webkit-scrollbar-thumb {
+        background-color: #8a10c5;
+        border-radius: 6px;
+    }
+    .results-container::-webkit-scrollbar-track {
+        background-color: #f3f4f6;
+    }
+
+    /* ======== TABLE + CONTENT ADJUSTMENTS ======== */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        text-align: center;
+        padding: 8px;
+    }
+    img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+    }
+</style>
+<section class="max-w-7xl mx-auto px-4 py-10">
+    <h1 class="text-4xl font-extrabold tracking-tight text-[#010101] mb-8 border-b pb-3 border-gray-200">
+        SJF Burst Time Prediction (ML) 
+    </h1>
+
+    {% if error %}
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl relative mb-6" role="alert">
+        <strong class="font-bold">Error!</strong>
+        <span class="block sm:inline">{{ error }}</span>
+    </div>
+    {% endif %}
+
+    <form method="post" id="sjf-predictor-form" class="grid lg:grid-cols-3 gap-8">
+        {% csrf_token %}
+
+        <div class="lg:col-span-1 space-y-6">
             
-            <div>
-                <span class="text-sm font-semibold uppercase tracking-wider text-[#8a10c5]">OS Simulation Suite</span>
-                <h1 class="mt-2 text-5xl font-extrabold tracking-tight text-[#010101] sm:text-6xl">
-                    Predictive Scheduling & <span class="text-[#8a10c5]">Memory Management</span>
-                </h1>
-                <p class="mt-6 text-lg text-gray-700 max-w-xl">
-                    Explore **Machine Learning-guided** simulations. Visualize processes with **Gantt charts** and compare performance across classic CPU and Page Replacement algorithms.
-                </p>
+            <div class="rounded-3xl bg-white p-6 shadow-xl ring-1 ring-gray-100/50 space-y-4">
+                <h2 class="text-xl font-semibold text-[#010101] border-b pb-3">Prediction Configuration</h2>
                 
-                <div class="mt-10 flex flex-wrap gap-4">
-                    <a href="{% url 'cpu_scheduler' %}"
-                       class="inline-flex items-center justify-center px-8 py-4 text-lg rounded-xl bg-[#8a10c5] text-white font-semibold shadow-xl shadow-[#8a10c5]/30 hover:shadow-2xl hover:bg-[#6c0ba0] transform hover:scale-[1.02] transition duration-300 focus-ring">
-                        Start CPU Scheduling
-                    </a>
-                    <a href="{% url 'pager' %}"
-                       class="inline-flex items-center justify-center px-8 py-4 text-lg rounded-xl border-2 border-[#8a10c5] text-[#8a10c5] bg-white font-semibold hover:bg-[#8a10c5]/10 transition duration-300 focus-ring">
-                         Start Page Replacement
-                    </a>
+                <div class="flex flex-col gap-1">
+                    <label for="num_processes_sjf" class="text-sm font-medium text-gray-700">Number of Processes:</label>
+                    <input type="number" name="num_processes" id="num_processes_sjf" min="1" max="10" value="{% if submitted_data_sjf %}{{ submitted_data_sjf.num_processes|default:'3' }}{% else %}3{% endif %}"
+                        class="w-full rounded-xl border border-gray-300 p-2.5 text-center focus:ring-2 focus:ring-[#8a10c5] focus:border-[#8a10c5]/50" required/>
+                </div>
+
+                <p class="text-xs text-gray-500 italic">
+                    The ML model predicts the **true Burst Time** based primarily on the **Arrival Time**, which is used as a proxy for potential CPU load, to determine the optimal SJF schedule.
+                </p>
+
+                <button type="button" onclick="window.generateTableManualSJF()" 
+                    class="w-full px-5 py-2.5 rounded-xl bg-gray-100 text-[#010101] hover:bg-gray-200 shadow transition focus:outline-none focus:ring-2 focus:ring-gray-300 border border-gray-300">
+                    Generate/Update Table
+                </button>
+            </div>
+
+            <div class="rounded-3xl bg-white p-6 shadow-xl ring-1 ring-gray-100/50 space-y-4">
+                <h2 class="text-xl font-semibold text-[#010101] border-b pb-3">Process Inputs for Prediction</h2>
+                <div id="process_details_sjf">
+                    <p class="text-gray-500" id="table-placeholder-sjf">Click 'Generate/Update Table' to input process details.</p>
                 </div>
             </div>
-            
-            <div class="flex justify-center lg:justify-end h-full">
-                <div class="w-full max-w-md h-[450px] relative">
-                    <div class="absolute -inset-8 bg-gradient-to-tr from-[#8a10c5]/20 to-transparent rounded-[2.5rem] blur-3xl opacity-50"></div>
 
-                    <div class="relative rounded-[2rem] bg-white/90 backdrop-blur-lg shadow-2xl p-6 ring-2 ring-[#8a10c5]/10 flex flex-col h-full transition-all duration-500 hover:shadow-3xl">
-                        
-                        <div class="rounded-xl p-3 mb-4 bg-[#8a10c5] text-white shadow-xl flex items-center justify-center space-x-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                            <p class="text-lg font-bold">OS Tutor AI</p>
-                        </div>
+            <button type="submit" 
+                class="w-full px-5 py-3 rounded-2xl bg-[#8a10c5] text-white font-bold text-lg hover:opacity-90 shadow-lg shadow-[#8a10c5]/50 transition focus:outline-none focus:ring-4 focus:ring-[#8a10c5]/40">
+                Run SJF Prediction & Simulation
+            </button>
+        </div>
 
-                        <div id="chat-window" class="flex-grow overflow-y-auto bg-white rounded-xl p-4 mb-4 border border-gray-200 text-sm shadow-inner transition-all duration-300">
-                            <p class="mb-3 p-2 bg-green-50 rounded-lg">
-                                <span class="font-bold text-green-700">Bot:</span> 
-                                Welcome to your OS Dashboard! Ask me anything about CPU scheduling, page replacement, or any core OS concept.
-                            </p>
-                        </div>
+        <div class="lg:col-span-2">
+            {% if sjf_results %}
+            <div class="results-container rounded-3xl p-0 shadow-2xl bg-white border border-gray-200">
+                
+                <div class="flex border-b border-gray-200">
+                    <button type="button" class="tab-button-sjf px-4 py-3 text-sm font-medium transition duration-150 ease-in-out" 
+                            data-tab="metrics-sjf" aria-selected="true">
+                        Metrics & Tables
+                    </button>
+                    <button type="button" class="tab-button-sjf px-4 py-3 text-sm font-medium transition duration-150 ease-in-out" 
+                            data-tab="burst-comp-sjf" aria-selected="false">
+                        1. Burst Prediction Comparison
+                    </button>
+                    <button type="button" class="tab-button-sjf px-4 py-3 text-sm font-medium transition duration-150 ease-in-out" 
+                            data-tab="burst-arrival-sjf" aria-selected="false">
+                        2. Actual Burst vs. Arrival
+                    </button>
+                    <button type="button" class="tab-button-sjf px-4 py-3 text-sm font-medium transition duration-150 ease-in-out" 
+                            data-tab="gantt-sjf" aria-selected="false">
+                        3. Gantt Chart
+                    </button>
+                </div>
 
-                        <div class="flex space-x-3">
-                            <input 
-                                type="text" 
-                                id="user-input"
-                                placeholder="e.g., Explain Shortest Job First (SJF)"
-                                class="flex-grow p-3 border-2 border-gray-200 rounded-full focus:ring-4 focus:ring-[#8a10c5]/50 focus:border-[#8a10c5] outline-none text-sm transition duration-200"
-                            >
-                            
-                            <button 
-                                id="send-button"
-                                onclick="sendMessage()"
-                                class="bg-[#8a10c5] hover:bg-[#6c0ba0] text-white font-bold py-3 px-6 rounded-full transition duration-200 text-sm shadow-md"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                            </button>
-                        </div>
+                <div id="tab-metrics-sjf" class="tab-content-sjf p-6 space-y-6">
+                    <h2 class="text-2xl font-bold text-[#003366] mb-4">ML Predicted SJF Results</h2>
+                    
+                    <div class="bg-blue-50 p-4 border-l-4 border-blue-500 rounded-lg shadow-md">
+                        <p class="text-lg font-extrabold text-blue-700">
+                            SJF Simulation Metrics (Using ML Predicted Burst Times)
+                        </p>
+                        <p class="mt-2 text-gray-800">
+                            Average Turnaround Time: <strong class="text-[#8a10c5]">{{ sjf_results.avg_turnaround|floatformat:"2" }} ms</strong>
+                        </p>
+                        <p class="text-gray-800">
+                            Average Waiting Time: <strong class="text-[#8a10c5]">{{ sjf_results.avg_waiting|floatformat:"2" }} ms</strong>
+                        </p>
                     </div>
+
+                    {% if initial_predictions %}
+                    <h3 class="text-xl font-semibold text-gray-800 border-b pb-2 pt-4">=== BURST PREDICTION COMPARISON (Arrival-Dependent) ===</h3>
+                    <p class="text-xs text-gray-500 italic mb-2">
+                        <span class="font-bold">Prediction Explanation:</span> 1️⃣ Simple Avg, 2️⃣ Exponential Avg, 3️⃣ ML Pred (used for scheduling)
+                    </p>
+                    <div class="overflow-x-auto mb-6">
+                        <table class="w-full text-sm text-left text-gray-700 shadow-md sm:rounded-lg">
+                            <thead class="text-xs text-white uppercase bg-gray-600">
+                                <tr>
+                                    <th scope="col" class="py-3 px-3 text-center">PID</th>
+                                    <th scope="col" class="py-3 px-3 text-center">Arrival</th>
+                                    <th scope="col" class="py-3 px-3 text-center">CPU_Load</th>
+                                    <th scope="col" class="py-3 px-3 text-center">Actual_Burst</th>
+                                    <th scope="col" class="py-3 px-3 text-center">Simple_Avg</th>
+                                    <th scope="col" class="py-3 px-3 text-center">Exp_Avg</th>
+                                    <th scope="col" class="py-3 px-3 text-center">ML_Pred</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for process in initial_predictions %}
+                                <tr class="bg-white border-b hover:bg-gray-50">
+                                    <td class="py-3 px-3 font-medium text-center text-gray-900 whitespace-nowrap">{{ process.PID }}</td>
+                                    <td class="py-3 px-3 text-center">{{ process.Arrival|floatformat:"2" }}</td>
+                                    <td class="py-3 px-3 text-center">{{ process.CPU_Load|floatformat:"2" }}</td>
+                                    <td class="py-3 px-3 text-center">{{ process.Actual_Burst|floatformat:"2" }}</td>
+                                    <td class="py-3 px-3 text-center">{{ process.Simple_Avg|floatformat:"2" }}</td>
+                                    <td class="py-3 px-3 text-center">{{ process.Exp_Avg|floatformat:"2" }}</td>
+                                    <td class="py-3 px-3 text-center font-bold text-[#8a10c5]">{{ process.ML_Pred|floatformat:"2" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+
+                    {% if sjf_results and sjf_results.schedule %}
+                    <h3 class="text-xl font-semibold text-gray-800 border-b pb-2 pt-4">=== FINAL SJF SCHEDULING (Using ML_Pred) ===</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-700 shadow-md sm:rounded-lg">
+                            <thead class="text-xs text-white uppercase bg-[#003366]">
+                                <tr>
+                                    <th scope="col" class="py-3 px-6">PID</th>
+                                    <th scope="col" class="py-3 px-6">Arrival</th>
+                                    <th scope="col" class="py-3 px-6">ML_Pred</th>
+                                    <th scope="col" class="py-3 px-6">Completion</th>
+                                    <th scope="col" class="py-3 px-6">Turnaround</th>
+                                    <th scope="col" class="py-3 px-6">Waiting</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for process in sjf_results.schedule %}
+                                <tr class="bg-white border-b hover:bg-gray-50">
+                                    <td class="py-3 px-6 font-medium text-gray-900 whitespace-nowrap">{{ process.PID }}</td>
+                                    <td class="py-3 px-6">{{ process.Arrival|floatformat:"2" }}</td>
+                                    <td class="py-3 px-6 font-bold">{{ process.ML_Pred|floatformat:"2" }}</td>
+                                    <td class="py-3 px-6">{{ process.Completion|floatformat:"2" }}</td>
+                                    <td class="py-3 px-6">{{ process.Turnaround|floatformat:"2" }}</td>
+                                    <td class="py-3 px-6">{{ process.Waiting|floatformat:"2" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div id="tab-burst-comp-sjf" class="tab-content-sjf p-6 space-y-6" style="display: none;">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6">1. Burst Prediction Comparison Plot</h3>
+                    
+                    {% if burst_comparison_base64 %}
+                    <div class="p-4 bg-white rounded-lg shadow-md border border-gray-200">
+                        <img src="data:image/png;base64,{{ burst_comparison_base64 }}" alt="Burst Prediction Comparison Plot" class="w-full h-auto">
+                    </div>
+                    <div class="mt-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-lg">
+                        <p class="text-sm text-blue-800">
+                            This chart compares the **Actual Burst Time** against the predicted values from Simple Averaging, Exponential Averaging, and the ML Model for each process. The ML prediction should be the closest to the Actual Burst.
+                        </p>
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500">Burst Prediction Comparison chart will appear here after running the simulation.</p>
+                    {% endif %}
+                </div>
+
+                <div id="tab-burst-arrival-sjf" class="tab-content-sjf p-6 space-y-6" style="display: none;">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6">2. Actual Burst vs. Arrival Time</h3>
+                    
+                    {% if burst_arrival_base64 %}
+                    <div class="p-4 bg-white rounded-lg shadow-md border border-gray-200">
+                        <img src="data:image/png;base64,{{ burst_arrival_base64 }}" alt="Actual Burst vs. Arrival Plot" class="w-full h-auto">
+                    </div>
+                    <div class="mt-4 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
+                        <p class="text-sm text-green-800">
+                            This chart visualizes the input parameters for the ML model, showing the relationship between a process's **Arrival Time** and its true **Actual Burst Time**. This helps illustrate the non-linear correlation the ML model is trying to learn.
+                        </p>
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500">Actual Burst vs. Arrival Time chart will appear here after running the simulation.</p>
+                    {% endif %}
+                </div>
+
+                <div id="tab-gantt-sjf" class="tab-content-sjf p-6 space-y-6" style="display: none;">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6">3. SJF Gantt Chart (ML Prediction)</h3>
+                    
+                    {% if gantt_base64_sjf %}
+                    <div class="p-4 bg-white rounded-lg shadow-md border border-gray-200">
+                        <img src="data:image/png;base64,{{ gantt_base64_sjf }}" alt="SJF ML Gantt Chart" class="w-full h-auto">
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500">Gantt chart will appear here after running the prediction.</p>
+                    {% endif %}
                 </div>
             </div>
-            
-        </div>
-    </div>
-</section>
-
----
-
-<section class="py-16 bg-white">
-    <div class="max-w-7xl mx-auto px-4">
-        <h2 class="text-3xl font-extrabold text-center text-[#010101] mb-12">
-             Your Daily OS Concept
-        </h2>
-
-        <div class="relative overflow-hidden rounded-2xl shadow-2xl ring-4 ring-[#8a10c5]/10 bg-white">
-            <div id="knowledge-slider" class="flex transition-transform duration-700 ease-in-out">
-                <div class="flex-shrink-0 w-full p-8 lg:p-12 text-center" data-concept="cpu-scheduling">
-                    <h3 class="text-2xl font-bold text-[#8a10c5] mb-4">CPU Scheduling: The Core of Multitasking</h3>
-                    <p class="text-gray-600 lg:text-lg max-w-3xl mx-auto">
-                        It determines which process gets to execute next on the CPU. Key goal: **maximize CPU utilization** while **minimizing response time**. Algorithms like **Round Robin (RR)** use time slicing for fairness, while **Shortest Job First (SJF)** optimizes for minimum average waiting time.
-                    </p>
-                </div>
-
-                <div class="flex-shrink-0 w-full p-8 lg:p-12 text-center" data-concept="page-replacement">
-                    <h3 class="text-2xl font-bold text-[#8a10c5] mb-4">Page Replacement: Managing Virtual Memory</h3>
-                    <p class="text-gray-600 lg:text-lg max-w-3xl mx-auto">
-                        When a page fault occurs (requested page is not in RAM), a page must be selected to be swapped out. Algorithms like **LRU (Least Recently Used)** try to predict the future by looking at the past, while **FIFO (First-In, First-Out)** is the simplest but often performs poorly.
-                    </p>
-                </div>
-
-                <div class="flex-shrink-0 w-full p-8 lg:p-12 text-center" data-concept="predictive-ml">
-                    <h3 class="text-2xl font-bold text-[#8a10c5] mb-4">ML in OS: Beyond Classic Heuristics</h3>
-                    <p class="text-gray-600 lg:text-lg max-w-3xl mx-auto">
-                        Traditional algorithms use fixed rules. Our simulator explores how **Machine Learning** models can learn from process history to make **smarter, predictive decisions** for scheduling and page replacement, potentially outperforming fixed-rule algorithms.
-                    </p>
-                </div>
+            {% else %}
+            <div class="lg:col-span-2 rounded-3xl bg-white p-10 shadow-xl ring-1 ring-gray-100/50 text-center border-dashed border-2 border-gray-300 h-full flex items-center justify-center">
+                <p class="text-gray-500 font-medium text-lg">
+                    Enter the process details on the left (only Arrival Time is needed) and click **'Run SJF Prediction & Simulation'** to view the schedule, tables, and **three focused charts**.
+                </p>
             </div>
+            {% endif %}
         </div>
-
-        <div class="flex justify-center mt-6 space-x-3">
-            <button class="w-3 h-3 rounded-full bg-[#8a10c5] opacity-100 transition duration-300" data-slide="0"></button>
-            <button class="w-3 h-3 rounded-full bg-gray-300 hover:bg-gray-400 transition duration-300" data-slide="1"></button>
-            <button class="w-3 h-3 rounded-full bg-gray-300 hover:bg-gray-400 transition duration-300" data-slide="2"></button>
-        </div>
-    </div>
+    </form>
 </section>
 
-</main>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
-    // --- CSRF Token Handler ---
-    function getCsrfToken() {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, 'csrftoken'.length + 1) === ('csrftoken' + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring('csrftoken'.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
-    // --- Main Chatbot Function (AJAX Call) ---
-    function sendMessage() {
-        const userInput = document.getElementById('user-input');
-        const chatWindow = document.getElementById('chat-window');
-        const message = userInput.value.trim();
-
-        if (message === "") return;
-
-        // 1. Display user message
-        chatWindow.innerHTML += `
-            <p class="mb-3 p-2 bg-blue-100 rounded-xl text-right max-w-[85%] ml-auto shadow-sm">
-                <span class="font-bold text-blue-700">You:</span> ${message}
-            </p>
-        `;
-        userInput.value = '';
-        chatWindow.scrollTop = chatWindow.scrollHeight; 
-
-        // 2. Display 'Typing...' placeholder while waiting for AI
-        const botPlaceholder = document.createElement('p');
-        botPlaceholder.className = "mb-3 p-2 bg-gray-100 rounded-xl max-w-[85%] shadow-sm text-gray-500 italic";
-        botPlaceholder.innerHTML = `<span class="font-bold text-gray-700">Bot:</span> Typing...`;
-        botPlaceholder.id = 'bot-placeholder';
-        chatWindow.appendChild(botPlaceholder);
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-
-        // 3. AJAX Request (Fetch API) - This is the REAL part
-        fetch("{% url 'chatbot_api' %}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCsrfToken() 
-            },
-            body: JSON.stringify({ message: message })
-        })
-        .then(response => {
-            // Remove placeholder regardless of success/fail
-            document.getElementById('bot-placeholder').remove();
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            // 4. Display AI response
-            const botResponse = data.response || "Sorry, I couldn't get a response.";
-            // Sanitize and format the response if needed, for now just text
-            chatWindow.innerHTML += `
-                <p class="mb-3 p-2 bg-green-50 rounded-xl max-w-[85%] shadow-sm">
-                    <span class="font-bold text-green-700">Bot:</span> ${botResponse}
-                </p>
-            `;
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-        })
-        .catch(error => {
-            console.error('AJAX Error:', error);
-            // 5. Display error message
-            chatWindow.innerHTML += `
-                <p class="mb-3 p-2 bg-red-100 rounded-xl max-w-[85%] shadow-sm">
-                    <span class="font-bold text-red-700">Bot Error:</span> Could not connect. Check network and API key.
-                </...
-            `;
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-        });
-    }
+    // CRUCIAL: Get data passed back from the Django view after a POST request.
+    const submittedDataSJF = JSON.parse('{{ submitted_data_sjf|safe|default:"{}" }}');
+    const isPostBackSJF = Object.keys(submittedDataSJF).length > 0;
     
-    // --- Knowledge Slider Functions ---
-    const slider = document.getElementById('knowledge-slider');
-    const slides = slider.children.length;
-    const dots = document.querySelectorAll('[data-slide]');
-    let currentSlide = 0;
-
-    function goToSlide(index) {
-        if (index < 0) index = slides - 1;
-        if (index >= slides) index = 0;
-        
-        currentSlide = index;
-        const offset = -currentSlide * 100;
-        slider.style.transform = `translateX(${offset}%)`;
-
-        // Update dots
-        dots.forEach((dot, i) => {
-            if (i === currentSlide) {
-                dot.classList.remove('bg-gray-300', 'hover:bg-gray-400');
-                dot.classList.add('bg-[#8a10c5]', 'opacity-100');
-            } else {
-                dot.classList.remove('bg-[#8a10c5]', 'opacity-100');
-                dot.classList.add('bg-gray-300', 'hover:bg-gray-400');
-            }
+    // --- TAB MANAGEMENT FUNCTIONALITY (SJF specific) ---
+    function showTabSJF(tabId) {
+        // 1. Hide all tab contents
+        document.querySelectorAll('.tab-content-sjf').forEach(content => {
+            content.style.display = 'none';
         });
+
+        // 2. Deactivate all buttons
+        document.querySelectorAll('.tab-button-sjf').forEach(button => {
+            button.classList.remove('bg-white', 'text-[#010101]', 'border-t', 'border-x');
+            button.classList.add('bg-gray-100', 'text-gray-600', 'border-b');
+            button.removeAttribute('aria-selected');
+        });
+
+        // 3. Show the requested content
+        const contentToShow = document.getElementById(`tab-${tabId}`);
+        if (contentToShow) {
+            contentToShow.style.display = 'block';
+        }
+
+        // 4. Activate the corresponding button
+        const activeBtn = document.querySelector(`.tab-button-sjf[data-tab="${tabId}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('bg-white', 'text-[#010101]', 'border-t', 'border-x', 'border-white');
+            activeBtn.classList.remove('bg-gray-100', 'text-gray-600', 'border-b');
+            activeBtn.setAttribute('aria-selected', 'true');
+        }
     }
 
-    // Initialize dots for navigation
-    dots.forEach(dot => {
-        dot.addEventListener('click', () => {
-            goToSlide(parseInt(dot.getAttribute('data-slide')));
-            resetInterval();
+    // Attach click listeners to tab buttons
+    $(document).ready(function() {
+        document.querySelectorAll('.tab-button-sjf').forEach(button => {
+            button.addEventListener('click', function() {
+                showTabSJF(this.getAttribute('data-tab'));
+            });
         });
     });
+    // ------------------------------------
+    
+    /**
+     * Dynamically generates the process input table for SJF prediction.
+     * Only includes 'Arrival Time (A)'.
+     */
+    function generateTableSJF(prefillData = null) {
+        const numProcesses = parseInt($('#num_processes_sjf').val());
+        const $details = $('#process_details_sjf');
+        
+        if (isNaN(numProcesses) || numProcesses < 1 || numProcesses > 10) {
+            alert("Please enter a number between 1 and 10.");
+            return;
+        }
 
-    // Auto-advance the slider
-    let slideInterval = setInterval(() => {
-        goToSlide(currentSlide + 1);
-    }, 8000); // Change slide every 8 seconds
+        let headers = ["Process ID", "Arrival Time (A)"]; 
+        
+        let tableHtml = `<div class="overflow-x-auto"><table class="table-input w-full text-sm">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    ${headers.map(h => `<th class="py-2 px-3 font-medium text-gray-600 text-center">${h}</th>`).join('')}
+                </tr>
+            </thead>
+            <tbody>`;
 
-    function resetInterval() {
-        clearInterval(slideInterval);
-        slideInterval = setInterval(() => {
-            goToSlide(currentSlide + 1);
-        }, 8000);
+        for (let i = 1; i <= numProcesses; i++) {
+            const arrivalValue = prefillData ? (prefillData[`P${i}_arrival`] || "") : "";
+            
+            tableHtml += `<tr class="border-b border-gray-100 hover:bg-gray-50">
+                <td class="py-2 px-3 font-medium text-center">P${i}</td>
+                <td class="py-2 px-3 flex justify-center">
+                    <input type="number" name="P${i}_arrival" value="${arrivalValue}" placeholder="0.00" min="0" step="0.01" required 
+                    class="w-full text-center border rounded-lg **p-2 h-10** focus:ring-2 focus:ring-[#8a10c5] focus:border-[#8a10c5]/50 text-sm" style="**min-width: 60px;** max-width: 100px;">
+                </td>
+                </tr>`;
+        }
+        
+        tableHtml += `</tbody></table></div>`;
+        $details.html(tableHtml);
     }
+    
+    window.generateTableManualSJF = function() {
+        generateTableSJF(null);
+    };
 
-    // Initial slide setting
-    goToSlide(0);
 
+    // Event Handler: Window Load (initial setup and post-back restore)
+    $(document).ready(function() {
+        if (isPostBackSJF) {
+            const numProcesses = submittedDataSJF['num_processes'][0] || '3';
+            $('#num_processes_sjf').val(numProcesses);
+            
+            let repopulationData = {};
+            for (const key in submittedDataSJF) {
+                if (submittedDataSJF.hasOwnProperty(key)) {
+                    repopulationData[key] = submittedDataSJF[key][0];
+                }
+            }
+            generateTableSJF(repopulationData);
+            
+            // Default to metrics tab
+            showTabSJF('metrics-sjf');
+        } else {
+            showTabSJF('metrics-sjf');
+        }
+    });
+
+    // Client-Side Validation to require table generation before submission
+    $('#sjf-predictor-form').on('submit', function(e) {
+        if ($('#process_details_sjf').find('#table-placeholder-sjf').length > 0) {
+            alert('🛑 Please click "Generate/Update Table" to input your process details before running the simulation.');
+            e.preventDefault();
+        }
+    });
 </script>
-{% endblock content %}
+{% endblock %}
